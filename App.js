@@ -1,38 +1,56 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import {StyleSheet, Text, View, Image, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
 import Task from './components/Task';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function App() {
+  const [currentInput,setCurrentInput]=useState('');
+  const [taskList,setTaskList]=useState([]);
 
-  const buttonClickFunction = () => {
-    console.log('first');
-    Alert.alert('Alert Title', 'Text added successfully', [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'OK', onPress: () => console.log('OK Pressed') },
-    ]);
+
+  const setInput=(text)=>{
+    setCurrentInput(text);
   }
+  const buttonClickFunction = async () => {
+    let data=await AsyncStorage.getItem('tasks');
+    if(!data){
+      await AsyncStorage.setItem('tasks',JSON.stringify([currentInput]));
+      setTaskList([currentInput]);
+    }
+    else{
+      let data_array=JSON.parse(data);
+      data_array.push(currentInput);
+      await AsyncStorage.setItem('tasks',JSON.stringify(data_array));
+      setTaskList(data_array);
+    }
+  }
+  useEffect(async()=>{
+    let tasks=await AsyncStorage.getItem('tasks');
+    tasks?setTaskList(JSON.parse(tasks)):setTaskList([]);
+  },[])
   return (
     <View style={styles.container}>
       <View style={styles.taskWrapper}>
         <Text style={styles.sectionTitle}>Today's tasks</Text>
         <View style={styles.items}>
-          <Task style={styles.singleitem} text={'This is task1'} />
-          <Task text={'This is task2'} />
-          <Task text={'This is task4'} />
-          <Task text={'This is task3'} />
+          {/* {
+            taskList.forEach((ind,ele)=>{
+              <Task style={styles.singleitem} text={ele} />
+            })
+          } */}
+          <Task style={styles.singleitem} text={'This is task2'} />
+          <Task style={styles.singleitem} text={'This is task4'} />
+          <Task style={styles.singleitem} text={'This is task3'} />
         </View>
       </View>
       <View style={styles.inputcontainer}>
         <View style={{ width: '70%' }}>
-          <TextInput style={styles.inputfield} editable placeholder='Type your text here...' placeholderTextColor={'gray'} />
+          <TextInput style={styles.inputfield} editable placeholder='Type your text here...' placeholderTextColor={'gray'}  onChangeText={setInput}>{currentInput}</TextInput>
         </View>
         <View>
-          <TouchableOpacity style={styles.submitbutton} onPress={buttonClickFunction}><Text>Add</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.submitbutton} onPress={buttonClickFunction}><Text style={styles.addtext}>Add</Text></TouchableOpacity>
         </View>
       </View>
     </View>
@@ -79,6 +97,12 @@ const styles = StyleSheet.create({
     height:50,
     width:60,
     backgroundColor: 'yellow',
+    borderRadius:10,
+    justifyContent:'center',
+    alignItems:'center',
+  },
+  addtext:{
+    fontSize:20,
   }
 });
 
